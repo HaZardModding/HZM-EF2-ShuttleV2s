@@ -1,0 +1,16 @@
+TIKI
+setup
+   {
+   scale 1
+   setsize "-635 -343 0" "640 343 290"
+   path models/fx/tags
+   }
+
+init
+   {
+   }
+
+animations
+   {
+	idle			tag-forward.tan
+   }

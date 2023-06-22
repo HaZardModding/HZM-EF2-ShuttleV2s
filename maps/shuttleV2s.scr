@@ -1,0 +1,158 @@
+////////////////////////////////////////////////////////////////////////
+////EF2 Level/Map Script File///////////////////////////////////////////
+//
+//  Script By:		Christian Strahl (Chrissstrahl)
+//  Created on:		01.Dez.2006
+//  Last Edit by:	Chrissstrahl
+//	Version:		Alpha #1.0
+//
+//	Website:		www.hazardmodding.chrissstrahl.de
+//	Organisation:	HazardModding
+////////////////////////////////////////////////////////////////////////
+
+//pilotorigin: 1173 2029 -162
+//shuttleorigin: 1119 1851 -76
+//diff:			54	178	86
+
+//======================================================================
+// Variables -> Misc
+//======================================================================
+vector shuttlePilotOrigin;
+string printString;
+float shuttleV2s_flying = 0;
+float shuttleV2s_float_moveUp = 0;
+float shuttleV2s_float_moveForward = 0;
+float shuttleV2s_float_rotateYup = 0;
+
+//======================================================================
+// Declare the script functions
+//======================================================================
+void main();
+void flyappaywhile();
+
+//======================================================================
+// Include -> Global scripts (to make the scripters live easyer)
+//======================================================================
+#include "maps/global_scripts/global_common.scr"
+#include "maps/global_scripts/global_shuttleV2s.scr"
+
+
+//======================================================================
+// Main (levelstart Thread)
+//======================================================================
+void main()
+////////////////////////////////////////////////////////////////////////
+//Level-Script Inizial Thread, starts on levelload.
+{
+	thread shuttleV2s_InizialShuttle( 1, 1, 2, 5); //Shuttle: Sound,Action,AllowReset,Allow Entering Shuttle Before Startup Complete,Delay (in secounds) //Use -> 0=No,1=Yes; defaults: 1,1,1,2,20
+	waitforplayer();
+	wait(3);
+	stuffCMD("give all");
+	$originShuttleV2sPilot.time(1);
+	$originShuttleV2sPilot.moveup(1.1);
+	
+	//$vehicle.drivable();
+//$vehicle.kill();
+	// $vehicle.vehiclespeed( 1000000 );
+	// $vehicle.anim( "open_idle" );
+	// $vehicle.bind( $origin_shuttle );
+	// wait(10);
+	// cprint("ANNI");
+	// $syd.ai_off(); //AI OFF or Actors are not responding to animations
+	// $syd.anim( "ent-vchair" );
+	// $syd.notsolid();
+	// $syd.bind( $origin_shuttle );
+}
+void flyapplay()
+{
+
+}
+
+
+void flyup()
+{
+	shuttleV2s_float_moveUp += 4;
+	eShuttlePilot.warp($originShuttleV2sPilot.getOrigin());
+	eShuttlePilot.playerviewangles($originShuttleV2s.getAngles());
+}
+void flydown()
+{
+	shuttleV2s_float_moveUp -= 4;
+	eShuttlePilot.warp($originShuttleV2sPilot.getOrigin());
+	eShuttlePilot.playerviewangles($originShuttleV2s.getAngles());
+}
+void flyforward()
+{	
+	shuttleV2s_float_moveForward += 8;
+	eShuttlePilot.warp($originShuttleV2sPilot.getOrigin());
+	eShuttlePilot.playerviewangles($originShuttleV2s.getAngles());
+}
+void flybackward()
+{
+	shuttleV2s_float_moveForward -= 8;
+	eShuttlePilot.warp($originShuttleV2sPilot.getOrigin());
+	eShuttlePilot.playerviewangles($originShuttleV2s.getAngles());
+}
+void flyleft()
+{
+	shuttleV2s_float_rotateYup += 1;
+	eShuttlePilot.warp($originShuttleV2sPilot.getOrigin());
+	eShuttlePilot.playerviewangles($originShuttleV2s.getAngles());
+}
+void flyright()
+{
+	shuttleV2s_float_rotateYup -= 1;
+	eShuttlePilot.warp($originShuttleV2sPilot.getOrigin());
+	eShuttlePilot.playerviewangles($originShuttleV2s.getAngles());
+}
+
+void flystop()
+{
+	shuttleV2s_float_rotateYup		= 0;
+	shuttleV2s_float_moveUp			= 0;
+	shuttleV2s_float_moveForward	= 0;
+	$originShuttleV2s.rotateYup(.001);
+	$originShuttleV2s.moveup(.001);
+	$originShuttleV2s.moveForward(.001);
+	$originShuttleV2s.time(.1);
+	eShuttlePilot.warp($originShuttleV2sPilot.getOrigin());
+	eShuttlePilot.playerviewangles($originShuttleV2s.getAngles());
+}
+
+
+void flyappaywhile()
+{
+	shuttleV2s_float_rotateYup		= 0;
+	shuttleV2s_float_moveUp			= 0;
+	shuttleV2s_float_moveForward	= 0;
+	//shuttleV2s_flying = 1;
+	while(doesEntityExist(eShuttlePilot))
+	{
+		$originShuttleV2s.moveForward	( shuttleV2s_float_moveForward );
+		$originShuttleV2s.rotateYup		( shuttleV2s_float_rotateYup );
+		$originShuttleV2s.moveup		( shuttleV2s_float_moveUp );
+		$originShuttleV2s.time(.25);
+		wait(.2);
+	}
+}
+
+
+
+void flyexit()
+{
+	killthread("flyappaywhile");
+	shuttleV2s_flying = 0;
+	$mShuttleInterior.displayeffect( "FadeIn", "Simple" ); 
+	eShuttlePilot.removehud("shuttlev2s_flightcontroll");
+	eShuttlePilot.setfloatvar("isNavigating",0);
+	eShuttlePilot.gravity(1);
+	eShuttlePilot.warp($originShuttleV2sPilot.getOrigin());
+	wait(.1);
+	eShuttlePilot.solid();
+	wait(.2);
+	eShuttlePilot.warp($originShuttleV2sPilot.getOrigin());
+//Reset vars
+	shuttleV2s_float_rotateYup		= 0;
+	shuttleV2s_float_moveUp			= 0;
+	shuttleV2s_float_moveForward	= 0;
+}

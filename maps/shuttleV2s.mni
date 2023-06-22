@@ -1,0 +1,14 @@
+LevelProperties
+{
+	mapname				"shuttleV2s"
+	longmapname			"Shuttle Version 2 Script"
+	screenshot			"sysimg/mapshots/shuttleV2s.tga"
+	gametype			"Holomatch"
+//	gametype			"CaptureTheFlag"
+	
+	modifier			"instantkill"
+	modifier			"actionhero"
+	modifier			"handicap"
+	modifier			"weaponscore"
+	modifier			"elimination"
+}

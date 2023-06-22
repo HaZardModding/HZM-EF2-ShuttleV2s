@@ -1,0 +1,41 @@
+TIKI
+
+setup
+	{
+	scale 1
+	fade_dist_mod 10000
+	lod 1 1 1 1 1
+ 
+	path models/vehicle/shuttleV2s
+	surface material1 shader e_shuttle_int_main
+	surface material2 shader e_shuttle_int_chairs
+	surface material3 shader e_shuttle_int_trans
+	surface material4 shader shuttleV2s_int_console_offline
+	surface material4 shader shuttleV2s_int_console_soff
+	surface material4 shader shuttleV2s_int_console_son
+	surface material5 shader e_shuttle_int_trans
+	surface material6 shader e_shuttle_int_main
+	surface material7 shader e_shuttle_int_consoles3
+	surface material8 shader e_shuttle_int_consoles2
+	surface material9 shader shuttleV2s_int_console_el
+	surface material9 shader shuttleV2s_int_console_er
+	surface material9 shader shuttleV2s_int_console_elr
+	}
+init
+{
+	server
+	{
+		setsize "-635 -166 0" "480 166 240"
+	}
+}
+animations 
+{
+
+	idle	e-shuttle-int.tan
+	{
+	}
+}   
+/*shuttleV2s
+QUAKED  vehicle_e-shuttle_e-shuttle-int  (0.5 0.25 0.25)  (0 0 0)  (0 0 0)
+enterprise-e-shuttle
+*/

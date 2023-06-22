@@ -1,0 +1,119 @@
+/////////////////////////////////////////////////
+// well whateva... i know u'll be angry reading such an useless comment :P
+/////////////////////////////////////////////////
+menu "shuttlev2s_flightcontroll" 640 480 NONE 1
+align bottom center
+showcommand "ui_showmouse\n"
+hidecommand "ui_hidemouse\n"
+bgcolor 0 0 0 0
+depth 0.1
+noresize
+fadein 0.5
+fullscreen 1
+noEscape 1
+
+resource
+Label
+{
+	name "background"
+	rect 0 0 256 128
+	borderstyle "NONE"
+	bgcolor 0 0 0 0
+	shader "hud/shuttleV2s_flightcontroll"
+}
+resource
+Button
+{
+	title " "
+	name "flyforward"
+	rect 2 3 90 32//2 3
+	fgcolor 0 0 0 0
+	bgcolor 1 0 0 0
+	borderstyle "NONE"
+	stuffcommand "script thread flyforward"
+	ordernumber 3
+}
+resource
+Button
+{
+	title " "
+	name "flybackward"
+	rect 2 94 90 32//2 94
+	fgcolor 0 0 0 0
+	bgcolor 1 0 0 0
+	borderstyle "NONE"
+	stuffcommand "script thread flybackward"
+	ordernumber 3
+}
+resource
+Button
+{
+	title " "
+	name "flyleft"
+	rect 2 37 40 55//2 37
+	fgcolor 0 0 0 0
+	bgcolor 1 0 0 0
+	borderstyle "NONE"
+	stuffcommand "script thread flyleft"
+	ordernumber 3
+}
+resource
+Button
+{
+	title " "
+	name "flyright"
+	rect 52 37 40 55//52 37
+	fgcolor 0 0 0 0
+	bgcolor 1 0 0 0
+	borderstyle "NONE"
+	stuffcommand "script thread flyright"
+	ordernumber 3
+}
+resource
+Button
+{
+	title " "
+	name "flystop"
+	rect 101 2 86 36//101 2
+	fgcolor 0 0 0 0
+	bgcolor 1 0 0 0
+	borderstyle "NONE"
+	stuffcommand "script thread flystop"
+	ordernumber 3
+}
+resource
+Button
+{
+	title " "
+	name "flyup"
+	rect 102 40 85 28//102 40
+	fgcolor 0 0 0 0
+	bgcolor 1 0 0 0
+	borderstyle "NONE"
+	stuffcommand "script thread flyup"
+	ordernumber 3
+}
+resource
+Button
+{
+	title " "
+	name "flydown"
+	rect 102 98 85 28//102 98
+	fgcolor 0 0 0 0
+	bgcolor 1 0 0 0
+	borderstyle "NONE"
+	stuffcommand "script thread flydown"
+	ordernumber 3
+}
+resource
+Button
+{
+	title " "
+	name "flyexit"
+	rect 195 8 61 113//195 8
+	fgcolor 0 0 0 0
+	bgcolor 1 0 0 0
+	borderstyle "NONE"
+	stuffcommand "script thread flyexit"
+	ordernumber 3
+}

@@ -1,0 +1,1536 @@
+////////////////////////////////////////////////////////////////////////
+////EF2 Global MP_Shuttle Script File///////////////////////////////////
+//
+//  Script By:		Christian Strahl (Chrissstrahl)
+//  Created on:		01.Dez.2006
+//  Last Edit by:	Chrissstrahl 2008.01.8
+//	Version:		1.0
+//
+//	Website:		www.hazardmodding.chrissstrahl.de
+//	Organisation:	HazardModding
+//
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+// This Schript-File is the global file for all stock stuttle functions,
+// it contains a lot usefull functions for the Fed Type 11 only.
+
+
+/* NOOOOOOOOOOOOOTES
+	//$originShuttleV2s.setSize('-635 -343 0','640 343 290');
+	//$originShuttleV2s.dropToFloor(999999);
+	//$originShuttleV2s.physics_on();
+allowAttackFromOtherScriptObjects( Boolean allow_flag )
+	Sets the _canBeAttackedByOtherScriptSlaves variabl
+closeportal
+	Close the area portal enclosed in this object
+openportal
+	Open the area portal enclosed in this object 
+handlesdamage( Boolean damage_flag )
+	sets the handlesdamage flag on the script slave
+onblock( String label )
+	Sets what label to jump to and process script at when blocked.
+vectorcross( Vector vector1,Vector vector2 )
+      Returns the cross product of vector1 and vector2. 
+vectordot( Vector vector1,Vector vector2 )
+      Returns the dot product of vector1 and vector2. 
+vectorforward( Vector vector )
+      Returns the forward vector of the vector. 
+vectorgetx( Vector vector )
+      Returns the x of the vector. 
+vectorgety( Vector vector )
+      Returns the y of the vector. 
+vectorgetz( Vector vector )
+      Returns the z of the vector. 
+vectorleft( Vector vector )
+      Returns the left vector of the vector. 
+vectorlength( Vector vector )
+      Returns the length of the vector. 
+vectornormalize( Vector vector )
+      Returns the normalized vector. 
+vectorscale( Vector vector,Float scale_value )
+      Returns the vector scaled by scale 
+vectorsetx( Vector vector,Float x_value )
+      Sets the x value of a vector 
+vectorsety( Vector vector,Float y_value )
+      Sets the y value of a vector 
+vectorsetz( Vector vector,Float z_value )
+      Sets the z value of a vector 
+vectorToString( Vector vector )
+      Converts a vector to a string 
+vectorup( Vector vector )
+      Returns the up vector of the vector. 
+*/
+
+//======================================================================
+// Variables -> Shuttle Configure vars
+//======================================================================
+//Allow reseting
+float shuttleV2s_allowReset;			//Allow to reset all damage 0=FALSE,1=TRUE
+//Sensitive Stuff
+float shuttleV2s_SENSITIVE_SHIELDS;	//responding to weaponfire 0=FALSE,1=TRUE
+float shuttleV2s_SENSITIVE_HULL;		//responding to weaponfire 0=FALSE,1=TRUE
+float shuttleV2s_SENSITIVE_ENGINE;		//responding to weaponfire 0=FALSE,1=TRUE
+//Health Stuff
+float shuttleV2s_HEALTH_BOW_SHIELDS;	//Amount of Frontshild Healtpoints #12000
+float shuttleV2s_HEALTH_STERN_SHIELDS;	//Amount of Backshild Healtpoints #1100
+float shuttleV2s_HEALTH_LEFT_SHIELDS;	//Amount of Leftshild Healtpoints #1200
+float shuttleV2s_HEALTH_RIGHT_SHIELDS;	//Amount of Rightshild Healtpoints #1200
+float shuttleV2s_HEALTH_TOP_SHIELDS;	//Amount of Topshild Healtpoints #8000
+float shuttleV2s_HEALTH_BOTTOM_SHIELDS;//Amount of Bottomshild Healtpoints #1600
+float shuttleV2s_HEALTH_ENINES;		//Amount of Engines Healtpoints	#4000
+float shuttleV2s_HEALTH_BOW_HULL;		//Amount of Fronthull Healtpoints #6000
+float shuttleV2s_HEALTH_STERN_HULL;	//Amount of Backhull Healtpoints #6000
+float shuttleV2s_HEALTH_LEFT_HULL;		//Amount of Lefthull Healtpoints #6000
+float shuttleV2s_HEALTH_RIGHT_HULL;	//Amount of Righthull Healtpoints #6000
+float shuttleV2s_HEALTH_TOP_HULL;		//Amount of Tophull Healtpoints #6000
+float shuttleV2s_HEALTH_BOTTOM_HULL;	//Amount of Bottomhull Healtpoints #6000
+
+//======================================================================
+// Variables -> Internal Vars
+//======================================================================
+//Required Vars (Do the hell not edit this vars)
+float FLIGHT_STATE_HORIZONTAL= 0;
+float FLIGHT_STATE_VERTICAL= 0;
+float SHIELD_FRONT_IMPACT_COUNT; 
+float SHIELD_FRONT_IMPACT_COUNT; 
+float SHIELD_FRONT_IMPACT_SHOW;
+float SHIELD_BACK_IMPACT_COUNT; 
+float SHIELD_BACK_IMPACT_SHOW;
+float SHIELD_LEFT_IMPACT_COUNT; 
+float SHIELD_LEFT_IMPACT_SHOW;
+float SHIELD_RIGHT_IMPACT_COUNT; 
+float SHIELD_RIGHT_IMPACT_SHOW;
+float SHIELD_TOP_IMPACT_COUNT; 
+float SHIELD_TOP_IMPACT_SHOW;
+float SHIELD_BOTTOM_IMPACT_COUNT;
+float SHIELD_BOTTOM_IMPACT_SHOW;
+float shuttleV2s_shuttleReset;
+float shuttleV2s_EXTERIOR_DOOR_ISWAITING;
+float I;
+float shuttleV2s_SHIELD_STANDBY_TIME;
+float shuttleV2s_SHIELDS_ARE_UP;
+float shuttleV2s_SHIELDS_KEEP_UP;
+string w;
+//======================================================================
+// Variables -> Entities
+//======================================================================
+//Required Vars (Do the hell not edit this vars)
+entity eShuttlePilot;							//The shuttlePilot
+entity eShuttleTransporter1;					//The shuttlePilot
+entity eShuttleTransporter2;					//The shuttlePilot
+entity ePlayerCurrent;							//Current Player
+vector shuttleV2s_startVector= '1020 800 1000';//ShuttleStart Origin
+float shuttleV2s_startAngle= 180;
+//Adjustable Vars (the hell end here,you can edit this vars)
+
+//TEST
+	entity e;
+	string s;
+
+
+//======================================================================
+// Definie Functions
+//======================================================================
+//Startup thread
+void shuttleV2s_cVarManager();
+void shuttleV2s_archetypesSetup();
+
+void shuttleV2s_InizialShuttle( float shuttleV2s_stuttleStartupSound,float shuttleV2s_shuttleStartupAction,float shuttleV2s_stuttleAllowEnterBefore,float shuttleV2s_ShuttleStartupDelay );
+//Startup - Reset Component
+void shuttleV2s_setupOrReset();
+
+//Hull
+void shuttleV2s_tmShuttleBowHull();
+void shuttleV2s_tmShuttleSternHull();
+void shuttleV2s_tmShuttleLeftHull();
+void shuttleV2s_tmShuttleRightHull();
+void shuttleV2s_tmShuttleTopHull();
+void shuttleV2s_tmShuttleBottomHull();
+//Sensitive Hull
+void shuttleV2s_impact();
+//Shields
+void shuttleV2s_tmShuttleShieldFront();
+void shuttleV2s_tmShuttleShieldBack();
+void shuttleV2s_tmShuttleShieldLeft();
+void shuttleV2s_tmShuttleShieldRight();
+void shuttleV2s_tmShuttleShieldTop();
+void shuttleV2s_tmShuttleShieldBottom();
+//Shield Sequences
+void shuttleV2s_ShuttleShieldOn();
+void shuttleV2s_ShuttleShieldOff();
+//Shield Effects
+void shuttleV2s_tmShuttleShieldFrontVisibilityManager();
+void shuttleV2s_tmShuttleShieldBackVisibilityManager();
+void shuttleV2s_tmShuttleShieldLeftVisibilityManager();
+void shuttleV2s_tmShuttleShieldRightVisibilityManager();
+void shuttleV2s_tmShuttleShieldTopVisibilityManager();
+void shuttleV2s_tmShuttleShieldBottomVisibilityManager();
+//Engines
+void shuttleV2s_tmShuttleEngineLeft();
+void shuttleV2s_tmShuttleEngineRight();
+//Doors
+void shuttleV2s_tmShuttleDoor();
+void shuttleV2s_tShuttleDoor();
+void shuttleV2s_ShuttleDoorOpen();
+void shuttleV2s_ShuttleDoorClose();
+//Controls
+void shuttleV2s_tShuttlePilot();
+void shuttleV2s_tShuttleDoor();
+void shuttleV2s_tShuttleShields();
+void shuttleV2s_tShuttleTransporter();
+//Transporter Sensitive triggers
+void shuttleV2s_tmShuttleTransporter1();
+void shuttleV2s_tmShuttleTransporter2();
+//Transportation
+void shuttleV2s_ShuttleTransportation( entity eShuttleTransporterbuffer,vector vTransportCoordinates,float TRANSPORT_NUM );
+//Interior Effect Manager
+void shuttleV2s_consoleShields();
+void shuttleV2s_consoleEngines();
+void shuttleV2s_setOnGround();
+
+
+
+void shuttleV2s_cVarManager()
+//======================================================================
+// Get Cvars/SV settings and 
+//======================================================================
+{
+print("run: shuttleV2s_cVarManager()\n");
+//======================================================================
+//Configuration
+//======================================================================
+//Does Shuttle have Sensitive Shields ?
+	shuttleV2s_SENSITIVE_SHIELDS= getCvarInt("shuttleV2s_SENSITIVE_SHIELDS");
+	if(shuttleV2s_SENSITIVE_SHIELDS!=1 ){shuttleV2s_SENSITIVE_SHIELDS=0;}
+//Does Shuttle have Sensitive Hull ?
+	shuttleV2s_SENSITIVE_HULL= getCvarInt("shuttleV2s_SENSITIVE_HULL");
+	if(shuttleV2s_SENSITIVE_HULL!=1 ){shuttleV2s_SENSITIVE_HULL=0;}
+//Does Shuttle have Sensitive Engines ?
+	shuttleV2s_SENSITIVE_ENGINE= getCvarInt("shuttleV2s_SENSITIVE_ENGINE");
+	if(shuttleV2s_SENSITIVE_ENGINE!= 1 ){shuttleV2s_SENSITIVE_ENGINE=0;}
+//Shuttle Health Shields
+	shuttleV2s_HEALTH_BOW_SHIELDS= getCvarInt("shuttleV2s_HEALTH_BOW_SHIELDS");
+	if(shuttleV2s_HEALTH_BOW_SHIELDS <= 0 ){shuttleV2s_HEALTH_BOW_SHIELDS=12000;}
+	shuttleV2s_HEALTH_STERN_SHIELDS= getCvarInt("shuttleV2s_HEALTH_STERN_SHIELDS");
+	if(shuttleV2s_HEALTH_STERN_SHIELDS <= 0 ){shuttleV2s_HEALTH_STERN_SHIELDS=11000;}
+	shuttleV2s_HEALTH_LEFT_SHIELDS= getCvarInt("shuttleV2s_HEALTH_LEFT_SHIELDS");
+	if(shuttleV2s_HEALTH_LEFT_SHIELDS <= 0 ){shuttleV2s_HEALTH_LEFT_SHIELDS=12000;}
+	shuttleV2s_HEALTH_RIGHT_SHIELDS= getCvarInt("shuttleV2s_HEALTH_RIGHT_SHIELDS");
+	if(shuttleV2s_HEALTH_RIGHT_SHIELDS <= 0 ){shuttleV2s_HEALTH_RIGHT_SHIELDS=12000;}
+	shuttleV2s_HEALTH_TOP_SHIELDS= getCvarInt("shuttleV2s_HEALTH_TOP_SHIELDS");
+	if(shuttleV2s_HEALTH_TOP_SHIELDS <= 0 ){shuttleV2s_HEALTH_TOP_SHIELDS=8000;}
+	shuttleV2s_HEALTH_BOTTOM_SHIELDS= getCvarInt("shuttleV2s_HEALTH_BOTTOM_SHIELDS");
+	if(shuttleV2s_HEALTH_BOTTOM_SHIELDS <= 0 ){shuttleV2s_HEALTH_BOTTOM_SHIELDS=8000;}
+//Shuttle Health Engines
+	shuttleV2s_HEALTH_ENINES= getCvarInt("shuttleV2s_HEALTH_ENINES");
+	if(shuttleV2s_HEALTH_ENINES <= 0 ){shuttleV2s_HEALTH_ENINES=2000;}//TEST default 4000
+//Shuttle Health Hull
+	shuttleV2s_HEALTH_BOW_HULL= getCvarInt("shuttleV2s_HEALTH_BOW_HULL");
+	if(shuttleV2s_HEALTH_BOW_HULL <= 0 ){shuttleV2s_HEALTH_BOW_HULL=6000;}
+	shuttleV2s_HEALTH_STERN_HULL= getCvarInt("shuttleV2s_HEALTH_STERN_HULL");
+	if(shuttleV2s_HEALTH_STERN_HULL <= 0 ){shuttleV2s_HEALTH_STERN_HULL=6000;}
+	shuttleV2s_HEALTH_LEFT_HULL= getCvarInt("shuttleV2s_HEALTH_LEFT_HULL");
+	if(shuttleV2s_HEALTH_LEFT_HULL <= 0 ){shuttleV2s_HEALTH_LEFT_HULL=6000;}
+	shuttleV2s_HEALTH_RIGHT_HULL= getCvarInt("shuttleV2s_HEALTH_RIGHT_HULL");
+	if(shuttleV2s_HEALTH_RIGHT_HULL <= 0 ){shuttleV2s_HEALTH_RIGHT_HULL=6000;}
+	shuttleV2s_HEALTH_TOP_HULL= getCvarInt("shuttleV2s_HEALTH_TOP_HULL");
+	if(shuttleV2s_HEALTH_TOP_HULL <= 0 ){shuttleV2s_HEALTH_TOP_HULL=6000;}
+	shuttleV2s_HEALTH_BOTTOM_HULL= getCvarInt("shuttleV2s_HEALTH_BOTTOM_HULL");
+	if(shuttleV2s_HEALTH_BOTTOM_HULL <= 0 ){shuttleV2s_HEALTH_BOTTOM_HULL=6000;}
+//======================================================================
+//ALLOW FEATURES
+//======================================================================
+	shuttleV2s_allowReset= getCvarInt("shuttleV2s_allowReset");
+	if(shuttleV2s_allowReset!= 1){shuttleV2s_allowReset=0;}
+}
+
+
+void shuttleV2s_archetypesSetup()
+//======================================================================
+// setup Archetypes
+//======================================================================
+{
+return;
+print("run: shuttleV2s_archetypesSetup()\n");
+	//$originShuttleV2s.time(4);
+	//$originShuttleV2s.moveDown(100);
+	waitFor($originShuttleV2s);
+	
+	$tmShuttleEngineRight.contents("targetable");
+	$tmShuttleEngineRight.archeType("Destructable");
+	
+	//$mShuttleExterior.contents("targetable");
+	//$mShuttleExterior.archetype("MissionObjective");
+	
+	$tShuttlePilot.contents("targetable");
+	$tShuttlePilot.archetype("Usable");
+	
+	$tShuttleShields.contents("targetable");
+	$tShuttleShields.archetype("Usable");
+	
+	$tShuttleTransporter.contents("targetable");
+	$tShuttleTransporter.archetype("Usable");
+}
+
+//======================================================================
+// Startup/Inizial Stuff
+//======================================================================
+void shuttleV2s_InizialShuttle( float shuttleV2s_stuttleStartupSound,float shuttleV2s_shuttleStartupAction,float shuttleV2s_stuttleAllowEnterBefore,float shuttleV2s_ShuttleStartupDelay )
+////////////////////////////////////////////////////////////////////////
+// This thread contains all stuff wich is required to get the shuttle
+// ready,ie. Bindings,Trigger,Effects Stuff...
+{
+//Spawn nessary stuff
+	spawn("script_model","model","models/vehicle/shuttlev2s-ext-dummy.tik","targetname","dummy","origin",vectorToString(shuttleV2s_startVector));
+//Get all Cvars
+	thread shuttleV2s_cVarManager();
+//Set all controls offline
+	$tShuttlePilot.nottriggerable();
+	$tShuttleShields.nottriggerable();
+	$tShuttleTransporter.nottriggerable();
+//Make Unsensitive
+	$tmShuttleShieldFront.nottriggerable();
+	$tmShuttleShieldBack.nottriggerable();
+	$tmShuttleShieldLeft.nottriggerable();
+	$tmShuttleShieldRight.nottriggerable();
+	$tmShuttleShieldTop.nottriggerable();
+	$tmShuttleShieldBottom.nottriggerable();
+	$tmShuttleBowHull.nottriggerable();
+	$tmShuttleLeftHull.nottriggerable();
+	$tmShuttleRightHull.nottriggerable();
+	$tmShuttleSternHull.nottriggerable();
+	$tmShuttleTopHull.nottriggerable();
+	$tmShuttleBottomHull.nottriggerable();
+	$tmShuttleEngineLeft.nottriggerable();
+	$tmShuttleEngineRight.nottriggerable();
+//Model Animations
+	$mShuttleInteriorDMG.hide();
+//Bindings
+	//Models
+	$aShuttleEngineLeft.bind( $originShuttleV2s );			//Model ArchetypeEngine Left
+	$aShuttleEngineRight.bind( $originShuttleV2s );			//Model ArchetypeEngine Right
+	$mShuttleExterior.bind( $originShuttleV2s );			//Model Exterior
+	$mShuttleInterior.bind( $originShuttleV2s );			//Model Interior
+	$mShuttleInteriorDMG.bind( $originShuttleV2s );		//Model Interior Damaged
+	$mShuttleDoor.bind( $originShuttleV2s );				//Model Exterior Door
+	$mShuttleSeat1.bind( $originShuttleV2s );				//Model Seat1
+	$mShuttleSeat2.bind( $originShuttleV2s );				//Model Seat2
+	$mShuttleSeat3.bind( $originShuttleV2s );				//Model Seat3
+	$mShuttleSeat4.bind( $originShuttleV2s );				//Model Seat4
+	//Clip
+	$mcShuttleInterior.bind( $originShuttleV2s );			//MovementClip Interior
+	$caShuttleInterior.bind( $originShuttleV2s );			//ClipAll Interior
+	$caShuttleFloor.bind( $originShuttleV2s );			//ClipAll Floor
+	$caShuttleCeiling.bind( $originShuttleV2s );			//ClipAll Ceiling
+	$caShuttleMiddleConsole.bind( $originShuttleV2s );	//ClipAll Middle Console
+	//Origins
+	$originShuttleV2sPilot.bind( $originShuttleV2s );	//Bind to originShuttleV2s!
+	$originShuttleV2sDoorTop.bind( $originShuttleV2s );	//Bind to originShuttleV2s!
+	$originShuttleV2sDoorBottom.bind( $originShuttleV2s );	//Bind to originShuttleV2s!
+	//Exterior Door -> Brushes
+	$tmShuttleDoorTop.bind( $originShuttleV2sDoorTop );			//Bind to origin_shuttle_doorTop!
+	$tmShuttleDoorBottom.bind( $originShuttleV2sDoorBottom );	//Bind to origin_shuttle_doorBottom!
+	//Trigger Multiple -> Transporter (Player/Monster Sensitive)
+	$tmShuttleTransporter1.bind( $originShuttleV2s );		//Trigger Multiple Transporter 1
+	$tmShuttleTransporter2.bind( $originShuttleV2s );		//Trigger Multiple Transporter 2
+	//Trigger Multiple -> Hull
+	$tmShuttleRightHull.bind( $originShuttleV2s );		//Trigger Multiple Hull RightSide
+	$tmShuttleLeftHull.bind( $originShuttleV2s );			//Trigger Multiple Hull LeftSide
+	$tmShuttleBowHull.bind( $originShuttleV2s );			//Trigger Multiple Hull Bug
+	$tmShuttleSternHull.bind( $originShuttleV2s );		//Trigger Multiple Hull Heck
+	$tmShuttleBottomHull.bind( $originShuttleV2s );		//Trigger Multiple Hull Bottom
+	$tmShuttleTopHull.bind( $originShuttleV2s );			//Trigger Multiple Hull Top
+	//Trigger Multiple -> Engines
+	$tmShuttleEngineLeft.bind( $originShuttleV2s );		//Trigger Multiple Engine Left
+	$tmShuttleEngineRight.bind( $originShuttleV2s );		//Trigger Multiple Engine Right
+	//Trigger Multiple -> Shields
+	$tmShuttleShieldFront.bind( $originShuttleV2s );		//Trigger Multiple Shield Front
+	$tmShuttleShieldBack.bind( $originShuttleV2s );		//Trigger Multiple Shield Back
+	$tmShuttleShieldLeft.bind( $originShuttleV2s );		//Trigger Multiple Shield Left
+	$tmShuttleShieldRight.bind( $originShuttleV2s );		//Trigger Multiple Shield Right
+	$tmShuttleShieldTop.bind( $originShuttleV2s );			//Trigger Multiple Shield Top
+	$tmShuttleShieldBottom.bind( $originShuttleV2s );		//Trigger Multiple Shield Bottom
+	//Trigger Use -> Controls
+	$tShuttlePilot.bind( $originShuttleV2s );				//Trigger(use) shuttlePilot
+	$tShuttleShields.bind( $originShuttleV2s );			//Trigger(use) Shields
+	$tShuttleTransporter.bind( $originShuttleV2s );		//Trigger(use) Transporter
+	$tShuttleDoor1.bind( $originShuttleV2s );				//Trigger(use) Exterior Door
+	$tShuttleDoor2.bind( $originShuttleV2s );				//Trigger(use) Exterior Door
+	$tShuttleDoor3.bind( $originShuttleV2s );				//Trigger(use) Exterior Door
+	//Trigger Hurt ->  Engine (if destroyed/damaged)
+	$thShuttleEngineLeft.bind( $originShuttleV2s );		//Trigger Hurt Engine
+	$thShuttleEngineRight.bind( $originShuttleV2s );		//Trigger Hurt Engine
+	//Automated Triggers
+	//Script_object -> Shields Visible Texture (Those are all notsolid and only for the visual effect on impact)
+	$visibleShuttleFrontShield.bind( $originShuttleV2s );
+	$visibleShuttleBackShield.bind( $originShuttleV2s );
+	$visibleShuttleTopShield.bind( $originShuttleV2s );
+	$visibleShuttleBottomShield.bind( $originShuttleV2s );
+	$visibleShuttleLeftShield.bind( $originShuttleV2s );
+	$visibleShuttleRightShield.bind( $originShuttleV2s );
+	//SFX -> Engine Damaged Flames
+	$sfxShuttleEngineRightFlame.bind( $originShuttleV2s );
+	$sfxShuttleEngineLeftFlame.bind( $originShuttleV2s );	
+	wait( 0.01 ); //Avoid Complications on slow computers (It's allways good to wait ;))
+	//Reset/Startup
+	
+	if( shuttleV2s_allowReset ){shuttleV2s_shuttleReset= 1;}//If a Complete Reset is alowed
+	else{shuttleV2s_shuttleReset= 0;}//Else (complete Reset is not allowed)
+//Run Startup/Reset Function
+	thread shuttleV2s_setupOrReset();
+	
+//Allow Opening Exterior Door before is Fully Poweredup
+	//IF TRUE make the trigger triggerable
+	if( shuttleV2s_stuttleAllowEnterBefore >= 1)
+	{
+		$tShuttleDoor1.triggerable();
+		$tShuttleDoor2.triggerable();
+		$tShuttleDoor3.triggerable();
+	}
+	//Else Make nottriggerable ( it will later become triggerable )
+	else
+	{
+		$tShuttleDoor1.nottriggerable();
+		$tShuttleDoor2.nottriggerable();
+		$tShuttleDoor3.nottriggerable();
+	}
+	//IF "2" is set the door is opening on map START
+	if( shuttleV2s_stuttleAllowEnterBefore== 2)
+	{
+		trigger("$tShuttleDoor1");
+	}
+
+//Startup Delay
+	wait ( shuttleV2s_ShuttleStartupDelay );
+//StartSound
+	//If Startupsound True
+	if ( shuttleV2s_stuttleStartupSound )
+	{
+		wait( 0.001 ); //Wait to avoid complications
+		$caShuttleMiddleConsole.playsound("sound/ships/forever/for_poweron.wav",3,4,200 ); //Play Startup sound
+		wait(2);
+		$caShuttleMiddleConsole.playsound ("sound/vehicles/shuttlecraft/shuttle_startup.wav",7,3,200 ); //Play Ready Sound
+		$caShuttleMiddleConsole.loopsound ("sound/vehicles/shuttlecraft/shuttle_interior_loop2.wav",5,150 ); //Add ambiente sound to the shuttle
+	}
+//Bring System Online
+	$caShuttleMiddleConsole.playsound("sound/shuttleV2s/vehicles/shuttlecraft/computer/online.wav" ,1 ,5 ,24 );//Wakeup with a soundnotification
+	shuttleV2s_consoleShields(); //Update Shields Stat
+	shuttleV2s_consoleEngines(); //Update Engines Stat
+	$tShuttlePilot.triggerable();
+	$tShuttleShields.triggerable();
+	$tShuttleTransporter.triggerable();
+	$tmShuttleShieldFront.triggerable();
+	$tmShuttleShieldBack.triggerable();
+	$tmShuttleShieldLeft.triggerable();
+	$tmShuttleShieldRight.triggerable();
+	$tmShuttleShieldTop.triggerable();
+	$tmShuttleShieldBottom.triggerable();
+	$tmShuttleBowHull.triggerable();
+	$tmShuttleLeftHull.triggerable();
+	$tmShuttleRightHull.triggerable();
+	$tmShuttleSternHull.triggerable();
+	$tmShuttleTopHull.triggerable();
+	$tmShuttleBottomHull.triggerable();
+	$tmShuttleEngineLeft.triggerable();
+	$tmShuttleEngineRight.triggerable();
+//Startup Action
+	//If Startup action True
+	if ( shuttleV2s_shuttleStartupAction )
+	{
+		//Check if the Door was used once,if then do not Autoopen it!!!
+		if(!$mShuttleDoor.doesVarExist("state"))
+		{
+			thread shuttleV2s_tShuttleDoor();
+		}
+	}
+//Activate Exterior Door Trigger ( after startup)
+		$tShuttleDoor1.triggerable(); //Force Activate
+		$tShuttleDoor2.triggerable(); //Force Activate
+		$tShuttleDoor3.triggerable(); //Force Activate
+}
+
+//======================================================================
+// Startup/Inizial Stuff -> Setup / Reset
+//======================================================================
+void shuttleV2s_setupOrReset()
+////////////////////////////////////////////////////////////////////////
+// This thread contains stuff wich is required to setup or reset the shuttle
+{
+	//Check if the Exterior Door was ever Open
+	if( $mShuttleDoor.doesVarExist("state"))
+	{
+		//If TRUE: allow Reset
+		if ( shuttleV2s_shuttleReset )
+		{
+			//If a Entity named Player is on the server
+			if ( doesEntityExist( $player ) )
+			{
+				$player.playsound("sound/misc/objective_update.wav" ,1 ,5 ,24 );//Wakeup with a soundnotification
+				$player.hudprint("^2Global Message: ^5Shuttle reseted,full Shields,Hull and Engine Health restored!\n");//Print Message
+			}
+			//For my super kewl script is in use ( the one wich gives each player a uniqe targetname )
+			while( I < 32 ) 
+			{
+				ePlayerCurrent= getEntity("pl" + I ); //Get this entity
+				//If the current Entity exists
+				if ( doesEntityExist( ePlayerCurrent ) )
+				{
+					ePlayerCurrent.playsound("sound/misc/objective_update.wav" ,1 ,5 ,24 ); //Wakeup with a soundnotification
+					ePlayerCurrent.hudprint("^2Global Message: ^5Shuttle reseted,full Shields,Hull and Engine Health restored!\n");//Print Message
+				}
+				I++; //Count oneup
+				wait( 0.001 );//This is required
+			}
+			$thShuttleEngineLeft.triggerable();
+			$thShuttleEngineLeft.triggerable();
+			shuttleV2s_shuttleReset= 0;
+			wait( 300 ); //Be fair!
+			shuttleV2s_shuttleReset= 1;
+		}
+		//If not TRUE do not allow Reset and inform all player of this illegal action
+		else
+		{
+			//If a Entity named Player is on the server
+			if ( doesEntityExist( $player ) ) 
+			{
+				$player.hudprint("^2Global Message: ^1Illegal Operation/Not allowed: ^5Shuttle Reset...\n");
+			}
+			//For my super kewl script is in use ( the one wich gives each player a uniqe targetname )
+			while( I < 32 )
+			{
+				ePlayerCurrent= getEntity("pl" + I ); //Get this entity
+				//If the current Entity exists
+				if ( doesEntityExist( ePlayerCurrent ) )
+				{
+					ePlayerCurrent.hudprint("^2Global Message: ^1Illegal Operation/Not allowed: ^5Shuttle Reset...\n");
+				}
+				I++;
+				wait( 0.001 );//This is required
+			}
+			return; //Return (Exit this thread [do not reset the stuff])
+		}
+	}
+// Trigger Setup
+// Make destructible,Make them Trigger on damage,make them trigger on death
+	//Engines 
+	$tmShuttleEngineLeft.destructible(1);
+	$tmShuttleEngineRight.destructible(1);
+	$tmShuttleEngineLeft.triggerondamage(1);
+	$tmShuttleEngineRight.triggerondamage(1);
+	$tmShuttleEngineRight.triggerondeath(1);
+	$tmShuttleEngineLeft.triggerondeath(1);
+	$tmShuttleEngineRight.health( shuttleV2s_HEALTH_ENINES );
+	$tmShuttleEngineLeft.health( shuttleV2s_HEALTH_ENINES );
+	$tmShuttleEngineLeft.solid();	//Make Solid,to avoid the boundingbox problem!
+	$tmShuttleEngineRight.solid();	//Make Solid,to avoid the boundingbox problem!
+	//Shields
+	$tmShuttleShieldFront.destructible(1);
+	$tmShuttleShieldBack.destructible(1);
+	$tmShuttleShieldLeft.destructible(1);
+	$tmShuttleShieldRight.destructible(1);
+	$tmShuttleShieldTop.destructible(1);
+	$tmShuttleShieldBottom.destructible(1);
+	$tmShuttleShieldFront.triggerondamage(1);
+	$tmShuttleShieldBack.triggerondamage(1);
+	$tmShuttleShieldLeft.triggerondamage(1);
+	$tmShuttleShieldRight.triggerondamage(1);
+	$tmShuttleShieldTop.triggerondamage(1);
+	$tmShuttleShieldBottom.triggerondamage(1);
+	$tmShuttleShieldFront.triggerondeath(1);
+	$tmShuttleShieldBack.triggerondeath(1);
+	$tmShuttleShieldLeft.triggerondeath(1);
+	$tmShuttleShieldRight.triggerondeath(1);
+	$tmShuttleShieldTop.triggerondeath(1);
+	$tmShuttleShieldBottom.triggerondeath(1);
+	$tmShuttleShieldFront.health( shuttleV2s_HEALTH_BOW_SHIELDS );
+	$tmShuttleShieldBack.health( shuttleV2s_HEALTH_STERN_SHIELDS );
+	$tmShuttleShieldLeft.health( shuttleV2s_HEALTH_LEFT_SHIELDS );
+	$tmShuttleShieldRight.health( shuttleV2s_HEALTH_RIGHT_SHIELDS );
+	$tmShuttleShieldTop.health( shuttleV2s_HEALTH_TOP_SHIELDS );
+	$tmShuttleShieldBottom.health( shuttleV2s_HEALTH_BOTTOM_SHIELDS );
+	$tmShuttleShieldFront.notsolid();
+	$tmShuttleShieldBack.notsolid();
+	$tmShuttleShieldLeft.notsolid();
+	$tmShuttleShieldRight.notsolid();
+	$tmShuttleShieldTop.notsolid();
+	$tmShuttleShieldBottom.notsolid();
+	//Hull
+	$tmShuttleBowHull.destructible(1);
+	$tmShuttleLeftHull.destructible(1);
+	$tmShuttleRightHull.destructible(1);
+	$tmShuttleSternHull.destructible(1);
+	$tmShuttleTopHull.destructible(1);
+	$tmShuttleBottomHull.destructible(1);
+	$tmShuttleDoorBottom.destructible(1);
+
+	$tmShuttleLeftHull.triggerondamage(1);
+	$tmShuttleBowHull.triggerondamage(1);
+	$tmShuttleRightHull.triggerondamage(1);	
+	$tmShuttleBowHull.triggerondeath(1);
+	$tmShuttleLeftHull.triggerondeath(1);
+	$tmShuttleSternHull.triggerondamage(1);
+	$tmShuttleRightHull.triggerondeath(1);
+	$tmShuttleTopHull.triggerondamage(1);
+	$tmShuttleBottomHull.triggerondamage(1);
+	$tmShuttleSternHull.triggerondeath(1);
+	$tmShuttleTopHull.triggerondeath(1);	
+	$tmShuttleBottomHull.triggerondeath(1);
+
+	$tmShuttleBowHull.health( shuttleV2s_HEALTH_BOW_HULL );
+	$tmShuttleLeftHull.health( shuttleV2s_HEALTH_LEFT_HULL );
+	$tmShuttleRightHull.health( shuttleV2s_HEALTH_RIGHT_HULL );
+	$tmShuttleSternHull.health( shuttleV2s_HEALTH_STERN_HULL );
+	$tmShuttleTopHull.health( shuttleV2s_HEALTH_TOP_HULL );
+	$tmShuttleBottomHull.health( shuttleV2s_HEALTH_BOTTOM_HULL );
+	
+	$tmShuttleBowHull.solid();		//Make Solid,to avoid the boundingbox problem!
+	$tmShuttleLeftHull.solid();		//Make Solid,to avoid the boundingbox problem!
+	$tmShuttleRightHull.solid();	//Make Solid,to avoid the boundingbox problem!
+	$tmShuttleSternHull.solid();	//Make Solid,to avoid the boundingbox problem!
+	$tmShuttleTopHull.solid();		//Make Solid,to avoid the boundingbox problem!
+	$tmShuttleBottomHull.solid();	//Make Solid,to avoid the boundingbox problem!
+	//Exterior Door
+	$tmShuttleDoorTop.destructible(1);
+	$tmShuttleDoorBottom.destructible(1);
+	$tmShuttleDoorTop.triggerondeath(1);
+	$tmShuttleDoorTop.triggerondamage(1);
+	$tmShuttleDoorBottom.triggerondeath(1);
+	$tmShuttleDoorBottom.health(100);
+	$tmShuttleDoorTop.health(100);
+	$tmShuttleDoorBottom.solid();
+	$tmShuttleDoorTop.solid();
+	//Transporters
+	$tmShuttleTransporter1.nottriggerable();
+	$tmShuttleTransporter2.nottriggerable();
+	//Engine Trigger Hurt
+	$thShuttleEngineLeft.nottriggerable();
+	$thShuttleEngineRight.nottriggerable();
+	//wait a moment to let the comupter think about this
+	wait( 0.1 ); //to avoid complications
+
+//Script_object visible Shield,hide this
+	$visibleShuttleFrontShield.hide();
+	$visibleShuttleBackShield.hide();
+	$visibleShuttleTopShield.hide();
+	$visibleShuttleBottomShield.hide();
+	$visibleShuttleLeftShield.hide();
+	$visibleShuttleRightShield.hide();
+	$sfxShuttleEngineRightFlame.hide();
+	$sfxShuttleEngineLeftFlame.hide();
+//Sensitive Setup
+	//If Engine is NOT Sensitive deactivate the Trigger Multiple
+	if(!shuttleV2s_SENSITIVE_ENGINE )
+	{
+		$tmShuttleEngineLeft.nottriggerable();
+		$tmShuttleEngineRight.nottriggerable();
+	}
+	//If Shield is NOT Sensitive deactivate the Trigger Multiple
+	if(!shuttleV2s_SENSITIVE_SHIELDS )
+	{
+		$tmShuttleShieldFront.nottriggerable();
+		$tmShuttleShieldBack.nottriggerable();
+		$tmShuttleShieldLeft.nottriggerable();
+		$tmShuttleShieldRight.nottriggerable();
+		$tmShuttleShieldTop.nottriggerable();
+		$tmShuttleShieldBottom.nottriggerable();
+	}
+	//If Hull is NOT Sensitive deactivate the Trigger Multiple
+	if(!shuttleV2s_SENSITIVE_HULL )
+	{
+		$tmShuttleBowHull.nottriggerable();
+		$tmShuttleLeftHull.nottriggerable();
+		$tmShuttleRightHull.nottriggerable();
+		$tmShuttleSternHull.nottriggerable();
+		$tmShuttleTopHull.nottriggerable();	
+		$tmShuttleBottomHull.nottriggerable();
+	}
+	thread shuttleV2s_setOnGround();
+	thread shuttleV2s_archetypesSetup();
+//Set FlotVars
+	$mShuttleDoor.setfloatvar("state",0 );
+}
+
+//======================================================================
+// Controll Functions -> shuttlePilot
+//======================================================================
+void shuttleV2s_tShuttlePilot()
+////////////////////////////////////////////////////////////////////////
+//$tShuttlePilot= trigger shuttlePilot helm.
+//
+{
+//If Multi Player,chek for cheats,exit with a note if no cheats deactivated
+	if(getCvarInt("g_gametype")== 1){
+		if(getCvarInt("cheats")!= 1){
+			centerPrint("You Require 'cheats 1' for this menue to work");
+			return;
+		}
+	}
+//Get calling Trigger
+entity eTrigger;
+	eTrigger= getCurrentEntity();
+//Chek if Caller is within distance of <FLOAT> Units (avoid multiple calls)
+	if(doesEntityExist(eShuttlePilot)){//is player still on the server?
+		if(eShuttlePilot.iswithindistanceof( eTrigger,100 )){
+			if(eShuttlePilot.getHealth()<=0){centerPrint("health 0");return;}
+			if(eShuttlePilot.getfloatvar("isNavigating")== 1){
+				return;
+			}
+			else{
+				eShuttlePilot.setfloatvar("isNavigating",0);
+			}
+		}
+		
+	}
+//Get caller (activating Player)
+	eShuttlePilot= eTrigger.getLastActivatingEntity();
+	//Chek if Caller is not within distance of <FLOAT> Units,then exit
+	if(doesEntityExist(eShuttlePilot)){//is player still on the server?
+		if(!eShuttlePilot.iswithindistanceof( eTrigger,100 )){
+			centerprint(">= 100");//Take not Note  of...
+			return;
+		}
+		eShuttlePilot.setfloatvar("isNavigating",1);
+	}
+	else{
+		//centerprint("!= exist");
+		return;
+	}
+//If exterior door open Close it
+	if($mShuttleDoor.getfloatvar("state")== 2){
+		thread shuttleV2s_ShuttleDoorClose();
+		//Here we can place a lock thread to lock the door...
+	}
+	eShuttlePilot.putawayweapon("dual");
+	eShuttlePilot.notsolid();
+	thread flyappaywhile();
+	eShuttlePilot.addhud("shuttlev2s_flightcontroll");
+	eTrigger.playsound("sound/ships/enterprise/eng_beep03.wav",1,2,128);
+	wait(1);
+	$mShuttleInterior.displayeffect("FadeOut","Simple");
+	if(!doesEntityExist(eShuttlePilot)){
+		return;
+	}
+	eShuttlePilot.playerviewangles($originShuttleV2s.getAngles());
+	eShuttlePilot.immobilize(0);
+}
+
+//======================================================================
+// Controll Functions -> Toggle Shields
+//======================================================================
+void shuttleV2s_tShuttleShields()
+////////////////////////////////////////////////////////////////////////
+// Toggle Shields
+{
+	
+	if($mShuttleExterior.doesVarExist("shieldState")) //0=deactivated,1=Activated,2=bussy,3=destroyed/defect
+	{
+		$tShuttleShields.playsound("sound/ships/enterprise/eng_beep03.wav" ,1 ,4 ,128 );
+		if( $mShuttleExterior.getfloatvar("shieldState")!= 3 && $mShuttleExterior.getfloatvar("shieldState")!= 2)//If shields are not defect/destroyed or bussy
+		{
+			if( $mShuttleExterior.getfloatvar("shieldState")== 0 )//Shields are off,activate them
+			{
+				shuttleV2s_SHIELDS_KEEP_UP= 1;
+				$tShuttleShields.nottriggerable();
+				$mShuttleExterior.setfloatvar("shieldState",2 );
+				thread shuttleV2s_ShuttleShieldOn();			
+				$tShuttleShields.triggerable();
+			}
+			else //Shields are on,deactivate them
+			{
+				shuttleV2s_SHIELDS_KEEP_UP=0;
+				$tShuttleShields.nottriggerable();
+				$mShuttleExterior.setfloatvar("shieldState",2 );
+				thread shuttleV2s_ShuttleShieldOff();
+				$tShuttleShields.triggerable();
+			}
+		}
+		else
+		{
+			print("^1Shields are busy,destroyed or defect\n");
+			return;
+		}
+	}
+	else //Set the floatvar once
+	{
+		$mShuttleExterior.setfloatvar("shieldState",0 );
+		thread shuttleV2s_tShuttleShields();
+	}
+	shuttleV2s_consoleShields(); //Update Console State
+}
+
+
+//======================================================================
+// Controll Functions -> Toggle Exterior Door
+//======================================================================
+void shuttleV2s_tShuttleDoor()
+////////////////////////////////////////////////////////////////////////
+// Toggle Exterior Door!!!
+{
+	print("Toggle eDoor");
+//float ShuttleDoorExteriorState;
+	if( $mShuttleDoor.doesVarExist("state"))	//0=closed,1=busy,2=open,3=Waiting,4=Abbort
+	{
+		if( $mShuttleDoor.getfloatvar("state")!= 1 )
+		{
+			if($mShuttleDoor.getfloatvar("state")== 2 )				//open -> Close
+			{
+				shuttleV2s_ShuttleDoorClose();
+			}
+			else 														//Closed -> Open
+			{
+				$mShuttleDoor.setfloatvar("state",1 );
+				print("^5ShuttleDoorExterior: Opening\n");
+				shuttleV2s_ShuttleDoorOpen();
+				$mShuttleDoor.setfloatvar("state",2 );
+			}
+		}
+		else
+		{
+			if( shuttleV2s_EXTERIOR_DOOR_ISWAITING)
+			{
+				return;
+			}
+		}
+	}
+	else
+	{
+		$mShuttleDoor.setfloatvar("state",0 );//closed
+		thread shuttleV2s_tShuttleDoor();
+	}
+}
+
+
+//======================================================================
+// Controll Functions -> Transporter
+//======================================================================
+void shuttleV2s_tShuttleTransporter()
+////////////////////////////////////////////////////////////////////////
+// Activate Transporter
+{
+	print("^5 Trigger -> Transporter\n");
+	$tShuttleTransporter.playsound("sound/ships/enterprise/eng_beep03.wav" ,1 ,4 ,128 );
+	$tShuttleTransporter.nottriggerable();
+	wait( 5 );
+	$tShuttleTransporter.nottriggerable();
+	$tmShuttleTransporter1.triggerable();
+	$tmShuttleTransporter2.triggerable();
+	wait( 0.1 );
+	$tmShuttleTransporter1.nottriggerable();
+	$tmShuttleTransporter2.nottriggerable();
+	$tShuttleTransporter.triggerable();
+}
+
+//======================================================================
+// Hull -> Damage Thread
+//======================================================================
+void shuttleV2s_tmShuttleBowHull()
+////////////////////////////////////////////////////////////////////////
+//Damage Thread -> Hull Bow
+{
+	thread shuttleV2s_impact();
+	print("Shuttle -> tmShuttleBowHull: " + $tmShuttleBowHull.gethealth() + "\n");
+}
+
+void shuttleV2s_tmShuttleSternHull()
+////////////////////////////////////////////////////////////////////////
+//Damage Thread -> Hull Stern
+{
+	thread shuttleV2s_impact();
+	print("Shuttle -> tmShuttleSternHull: " + $tmShuttleSternHull.gethealth() + "\n");
+}
+
+void shuttleV2s_tmShuttleLeftHull()
+////////////////////////////////////////////////////////////////////////
+//Damage Thread -> Hull Left
+{
+	thread shuttleV2s_impact();
+	print("Shuttle -> tmShuttleLeftHull: " + $tmShuttleLeftHull.gethealth() + "\n");
+}
+
+void shuttleV2s_tmShuttleRightHull()
+////////////////////////////////////////////////////////////////////////
+//Damage Thread -> Hull Right
+{
+	thread shuttleV2s_impact();
+	print("Shuttle -> tmShuttleRightHull: " + $tmShuttleRightHull.gethealth() + "\n");
+}
+
+void shuttleV2s_tmShuttleTopHull()
+////////////////////////////////////////////////////////////////////////
+//Damage Thread -> Hull Top
+{
+	thread shuttleV2s_impact();
+	print("Shuttle -> tmShuttleTopHull: " + $tmShuttleTopHull.gethealth() + "\n");
+}
+
+void shuttleV2s_tmShuttleBottomHull()
+////////////////////////////////////////////////////////////////////////
+//Damage Thread -> Hull Bottom
+{
+	thread shuttleV2s_impact();
+	print("Shuttle -> tmShuttleBottomHull: " + $tmShuttleBottomHull.gethealth() + "\n");
+}
+
+
+void shuttleV2s_impact()
+////////////////////////////////////////////////////////////////////////
+//On Impact autoactivate shilds and hold them for at last 20 sec after impact
+{
+	shuttleV2s_SHIELD_STANDBY_TIME= 20;//Set/Reset Timer on each impact
+	if(shuttleV2s_SHIELDS_ARE_UP || shuttleV2s_SHIELDS_KEEP_UP){
+		return;
+	}
+	shuttleV2s_SHIELDS_ARE_UP=1;
+	$caShuttleMiddleConsole.playsound("sound/ships/enterprise/ent_redalert.wav",3,3,200);
+	wait(.25);
+	if($mShuttleExterior.getfloatvar("shieldState")== 1){//If shields are allready up,keep them up
+		shuttleV2s_SHIELDS_KEEP_UP= 1;
+		
+	}
+	else{
+		shuttleV2s_SHIELDS_KEEP_UP= 0;
+		shuttleV2s_ShuttleShieldOn();
+	}
+	while(shuttleV2s_SHIELD_STANDBY_TIME > 0){
+		wait(2);
+		shuttleV2s_SHIELD_STANDBY_TIME-=2;
+		if(shuttleV2s_SHIELDS_KEEP_UP){return;}
+	}
+	shuttleV2s_SHIELDS_ARE_UP=0;
+	shuttleV2s_ShuttleShieldOff();
+}
+
+
+
+//======================================================================
+// Shield -> Damage Thread
+//======================================================================
+void shuttleV2s_tmShuttleShieldFront()
+////////////////////////////////////////////////////////////////////////
+//Damage Thread -> Shield Front
+{
+	thread shuttleV2s_impact();
+	print("tmShuttleShieldFront health: " + $tmShuttleShieldFront.gethealth() + "\n");
+	if( $tmShuttleShieldFront.gethealth() < 0)
+	{
+		$tmShuttleShieldFront.notsolid();
+		$tmShuttleShieldFront.nottriggerable();
+		print("tmShuttleShieldFront health: ^3Killed\n");
+		killthread("shuttleV2s_tmShuttleShieldFrontVisibilityManager");
+		$visibleShuttleFrontShield.hide();
+	}
+	if(!SHIELD_FRONT_IMPACT_SHOW )
+	{
+		thread shuttleV2s_tmShuttleShieldFrontVisibilityManager();
+	}
+	SHIELD_FRONT_IMPACT_COUNT= 3;
+}
+void shuttleV2s_tmShuttleShieldBack()
+////////////////////////////////////////////////////////////////////////
+//Damage Thread -> Shield Back
+{
+	thread shuttleV2s_impact();
+	print("tmShuttleShieldBack health: " + $tmShuttleShieldBack.gethealth() + "\n");
+	if( $tmShuttleShieldBack.gethealth() < 0)
+	{
+		$tmShuttleShieldBack.notsolid();
+		$tmShuttleShieldBack.nottriggerable();
+		print("tmShuttleShieldBack: ^3Killed\n");
+		killthread("shuttleV2s_tmShuttleShieldBackVisibilityManager");
+		$visibleShuttleBackShield.hide();
+	}
+	if(!SHIELD_BACK_IMPACT_SHOW )
+	{
+		thread shuttleV2s_tmShuttleShieldBackVisibilityManager();
+	}
+	SHIELD_BACK_IMPACT_COUNT= 3;
+}
+void shuttleV2s_tmShuttleShieldLeft()
+////////////////////////////////////////////////////////////////////////
+//Damage Thread -> Shield Left
+{
+	thread shuttleV2s_impact();
+	$visibleShuttleLeftShield.show();
+	print("tmShuttleShieldLeft health: " + $tmShuttleShieldLeft.gethealth() + "\n");
+	if( $tmShuttleShieldLeft.gethealth() < 0)
+	{
+		$tmShuttleShieldLeft.notsolid();
+		$tmShuttleShieldLeft.nottriggerable();
+		print("tmShuttleShieldLeft: ^3Killed\n");
+		killthread("shuttleV2s_tmShuttleShieldLeftVisibilityManager");
+		$visibleShuttleLeftShield.hide();
+	}
+	if(!SHIELD_LEFT_IMPACT_SHOW )
+	{
+		thread shuttleV2s_tmShuttleShieldLeftVisibilityManager();
+	}
+	SHIELD_LEFT_IMPACT_COUNT= 3;
+}
+void shuttleV2s_tmShuttleShieldRight()
+////////////////////////////////////////////////////////////////////////
+//Damage Thread -> Shield Right
+{
+	$visibleShuttleRightShield.show();
+	print("tmShuttleShieldRight health: " + $tmShuttleShieldRight.gethealth() + "\n");
+	if( $tmShuttleShieldRight.gethealth() < 0)
+	{
+		$tmShuttleShieldRight.notsolid();
+		$tmShuttleShieldRight.nottriggerable();
+		print("tmShuttleShieldRight: ^3Killed\n");
+		killthread("shuttleV2s_tmShuttleShieldRightVisibilityManager");
+		$visibleShuttleRightShield.hide();
+	}
+	if(!SHIELD_RIGHT_IMPACT_SHOW )
+	{
+		thread shuttleV2s_tmShuttleShieldRightVisibilityManager();
+	}
+	SHIELD_RIGHT_IMPACT_COUNT= 3;
+}
+void shuttleV2s_tmShuttleShieldTop()
+////////////////////////////////////////////////////////////////////////
+//Damage Thread -> Shield Top
+{
+	thread shuttleV2s_impact();
+	$visibleShuttleTopShield.show();
+	print("tmShuttleShieldTop health: " + $tmShuttleShieldTop.gethealth() + "\n");
+	if( $tmShuttleShieldTop.gethealth() < 0)
+	{
+		$tmShuttleShieldTop.notsolid();
+		$tmShuttleShieldTop.nottriggerable();
+		print("tmShuttleShieldTop: ^3Killed\n");
+		killthread("shuttleV2s_tmShuttleShieldTopVisibilityManager");
+		$visibleShuttleTopShield.hide();
+	}
+	if(!SHIELD_TOP_IMPACT_SHOW )
+	{
+		thread shuttleV2s_tmShuttleShieldTopVisibilityManager();
+	}
+	SHIELD_TOP_IMPACT_COUNT= 3;
+}
+void shuttleV2s_tmShuttleShieldBottom()
+////////////////////////////////////////////////////////////////////////
+//Damage Thread -> Shield Bottom
+{
+	thread shuttleV2s_impact();
+	$visibleShuttleBottomShield.show();
+	print("tmShuttleShieldBottom health: " + $tmShuttleShieldBottom.gethealth() + "\n");
+	if( $tmShuttleShieldBottom.gethealth() < 0)
+	{
+		$tmShuttleShieldBottom.notsolid();
+		$tmShuttleShieldBottom.nottriggerable();
+		print("tmShuttleShieldBottom: ^3Killed\n");
+		killthread("shuttleV2s_tmShuttleShieldBottomVisibilityManager");
+		$visibleShuttleBottomShield.hide();
+	}
+	if(!SHIELD_BOTTOM_IMPACT_SHOW )
+	{
+		thread shuttleV2s_tmShuttleShieldBottomVisibilityManager();
+	}
+	SHIELD_BOTTOM_IMPACT_COUNT= 3;
+}
+
+
+//======================================================================
+// Shield -> Sequences (On/Off)
+//======================================================================
+void shuttleV2s_ShuttleShieldOn()
+////////////////////////////////////////////////////////////////////////
+//Raise Shields
+{
+	killthread("shuttleV2s_ShuttleShieldOff");
+//eofTEST
+	$mShuttleExterior.setfloatvar("shieldState",1 );//Mark Shilds as Online
+	$mShuttleInterior.anim("online_shields");
+	thread shuttleV2s_consoleShields();//Update Interior Console
+	$tmShuttleShieldBottom.playsound("sound/player/shieldup.wav" ,1 ,1 ,1000 );
+	if( $tmShuttleShieldFront.gethealth() > 0 )
+	{
+		$visibleShuttleFrontShield.show();
+		$tmShuttleShieldFront.solid();
+		$tmShuttleShieldFront.triggerable();
+	}
+	if( $tmShuttleShieldLeft.gethealth() > 0)
+	{
+		wait( 0.1 );
+		$visibleShuttleLeftShield.show();
+		$tmShuttleShieldLeft.solid();
+		$tmShuttleShieldLeft.triggerable();
+	}
+	if( $tmShuttleShieldRight.gethealth() > 0)
+	{
+		$visibleShuttleRightShield.show();
+		$tmShuttleShieldRight.solid();
+		$tmShuttleShieldRight.triggerable();
+	}
+	if( $tmShuttleShieldBack.gethealth() > 0)
+	{
+		wait( 0.1 );
+		$visibleShuttleBackShield.show();
+		$tmShuttleShieldBack.solid();
+		$tmShuttleShieldBack.triggerable();
+	}
+	if( $tmShuttleShieldBottom.gethealth() > 0)
+	{	
+		wait( 0.1 );
+		$visibleShuttleBottomShield.show();
+		$tmShuttleShieldBottom.solid();
+		$tmShuttleShieldBottom.triggerable();
+	}
+	if( $tmShuttleShieldTop.gethealth() > 0)
+	{
+		wait( 0.1 );
+		$visibleShuttleTopShield.show();
+		$tmShuttleShieldTop.solid();
+		$tmShuttleShieldTop.triggerable();
+	}
+	wait( 2.7 ); //Show shield on startup time (in secounds)
+	$visibleShuttleFrontShield.hide();
+	$visibleShuttleBackShield.hide();
+	$visibleShuttleTopShield.hide();
+	$visibleShuttleBottomShield.hide();
+	$visibleShuttleLeftShield.hide();
+	$visibleShuttleRightShield.hide();
+}
+
+void shuttleV2s_ShuttleShieldOff()
+{
+////////////////////////////////////////////////////////////////////////
+//lower Shields
+	killthread("shuttleV2s_ShuttleShieldOn");
+//eofTEST
+	$mShuttleExterior.setfloatvar("shieldState",0 );//Mark shilds as offline
+	thread shuttleV2s_consoleShields();//Update Interior Console
+	$mShuttleInterior.anim("online");//Make visible on console
+	shuttleV2s_SHIELDS_KEEP_UP=0;//Signal that the shilds are offline
+	$tmShuttleShieldBottom.playsound("sound/player/shielddown.wav" ,1 ,1 ,1000 );
+	$tmShuttleShieldFront.notsolid();
+	$tmShuttleShieldBack.notsolid();
+	$tmShuttleShieldLeft.notsolid();
+	$tmShuttleShieldRight.notsolid();
+	$tmShuttleShieldTop.notsolid();
+	$tmShuttleShieldBottom.notsolid();
+	$tmShuttleShieldFront.nottriggerable();
+	$tmShuttleShieldBack.nottriggerable();
+	$tmShuttleShieldLeft.nottriggerable();
+	$tmShuttleShieldRight.nottriggerable();
+	$tmShuttleShieldTop.nottriggerable();
+	$tmShuttleShieldBottom.nottriggerable();
+	//Avoid Bugs (Foces the shields to disapear)
+	SHIELD_FRONT_IMPACT_COUNT 	= 0;	
+	SHIELD_BACK_IMPACT_COUNT 	= 0;
+	SHIELD_LEFT_IMPACT_COUNT 	= 0;
+	SHIELD_RIGHT_IMPACT_COUNT 	= 0;
+	SHIELD_TOP_IMPACT_COUNT 		= 0;
+	SHIELD_BOTTOM_IMPACT_COUNT 	= 0;
+	//And Hide Them Manualy
+	$visibleShuttleFrontShield.hide();
+	$visibleShuttleBackShield.hide();
+	$visibleShuttleTopShield.hide();
+	$visibleShuttleBottomShield.hide();
+	$visibleShuttleLeftShield.hide();
+	$visibleShuttleRightShield.hide();
+}
+
+//======================================================================
+// Shield -> Effect Managers
+//======================================================================
+void shuttleV2s_tmShuttleShieldFrontVisibilityManager()
+////////////////////////////////////////////////////////////////////////
+//Visibility Manager Front
+{
+	SHIELD_FRONT_IMPACT_SHOW= 1;
+	while( SHIELD_FRONT_IMPACT_COUNT > 0)
+	{
+		$visibleShuttleFrontShield.show();
+		wait( 1 );
+		SHIELD_FRONT_IMPACT_COUNT--;
+	}
+	$visibleShuttleFrontShield.hide();
+	SHIELD_FRONT_IMPACT_SHOW= 0;
+}
+
+void shuttleV2s_tmShuttleShieldBackVisibilityManager()
+////////////////////////////////////////////////////////////////////////
+//Visibility Manager Back
+{
+	SHIELD_BACK_IMPACT_SHOW= 1;
+	while( SHIELD_BACK_IMPACT_COUNT > 0)
+	{
+		$visibleShuttleBackShield.show();
+		wait( 1 );
+		SHIELD_BACK_IMPACT_COUNT--;
+	}
+	$visibleShuttleBackShield.hide();
+	SHIELD_BACK_IMPACT_SHOW= 0;
+}
+
+void shuttleV2s_tmShuttleShieldLeftVisibilityManager()
+////////////////////////////////////////////////////////////////////////
+//Visibility Manager Left
+{
+	SHIELD_LEFT_IMPACT_SHOW= 1;
+	while( SHIELD_LEFT_IMPACT_COUNT > 0)
+	{
+		$visibleShuttleLeftShield.show();
+		wait( 1 );
+		SHIELD_LEFT_IMPACT_COUNT--;
+	}
+	$visibleShuttleLeftShield.hide();
+	SHIELD_LEFT_IMPACT_SHOW= 0;
+}
+
+void shuttleV2s_tmShuttleShieldRightVisibilityManager()
+////////////////////////////////////////////////////////////////////////
+//Visibility Manager Right
+{
+	SHIELD_RIGHT_IMPACT_SHOW= 1;
+	while( SHIELD_RIGHT_IMPACT_COUNT > 0)
+	{
+		$visibleShuttleRightShield.show();
+		wait( 1 );
+		SHIELD_RIGHT_IMPACT_COUNT--;
+	}
+	$visibleShuttleRightShield.hide();
+	SHIELD_RIGHT_IMPACT_SHOW= 0;
+}
+
+void shuttleV2s_tmShuttleShieldTopVisibilityManager()
+////////////////////////////////////////////////////////////////////////
+//Visibility Manager Top
+{
+	SHIELD_TOP_IMPACT_SHOW= 1;
+	while( SHIELD_TOP_IMPACT_COUNT > 0)
+	{
+		$visibleShuttleTopShield.show();
+		wait( 1 );
+		SHIELD_TOP_IMPACT_COUNT--;
+	}
+	$visibleShuttleTopShield.hide();
+	SHIELD_TOP_IMPACT_SHOW= 0;
+}
+
+void shuttleV2s_tmShuttleShieldBottomVisibilityManager()
+////////////////////////////////////////////////////////////////////////
+//Visibility Manager Bottom
+{
+	SHIELD_BOTTOM_IMPACT_SHOW= 1;
+	while( SHIELD_BOTTOM_IMPACT_COUNT > 0)
+	{
+		$visibleShuttleBottomShield.show();
+		wait( 1 );
+		SHIELD_BOTTOM_IMPACT_COUNT--;
+	}
+	$visibleShuttleBottomShield.hide();
+	SHIELD_BOTTOM_IMPACT_SHOW= 0;
+}
+
+
+//======================================================================
+// Engine -> Damage Thread
+//======================================================================
+void shuttleV2s_tmShuttleEngineLeft()
+////////////////////////////////////////////////////////////////////////
+//Damage Thread  -> Engine Left
+{
+	thread shuttleV2s_impact();
+	print("Engine Left: " + $tmShuttleEngineLeft.gethealth() + "\n");
+	if( $tmShuttleEngineLeft.gethealth() < 0)
+	{
+		shuttleV2s_consoleEngines();
+		print("Engine Left: ^3Killed\n");
+		$tmShuttleEngineLeft.nottriggerable();
+		$sfxShuttleEngineLeftFlame.selfdetonate();
+		$sfxShuttleEngineLeftFlame.show();
+		$thShuttleEngineLeft.triggerable();
+	}
+}
+void shuttleV2s_tmShuttleEngineRight()
+////////////////////////////////////////////////////////////////////////
+//Damage Thread  -> Engine Right
+{
+	thread shuttleV2s_impact();
+	print("Engine Right: " + $tmShuttleEngineRight.gethealth() + "\n");
+	if( $tmShuttleEngineRight.gethealth() < 0)
+	{
+		shuttleV2s_consoleEngines();
+		print("Engine Right: ^3Killed\n");
+		$tmShuttleEngineRight.nottriggerable();
+		$sfxShuttleEngineRightFlame.selfdetonate();
+		$sfxShuttleEngineRightFlame.show();
+		$thShuttleEngineRight.triggerable();
+	}
+}
+
+//======================================================================
+// Exterior Door -> Damage Thread
+//======================================================================
+void shuttleV2s_tmShuttleDoor()
+////////////////////////////////////////////////////////////////////////
+// Damage Thread
+{
+	thread shuttleV2s_impact();
+	print("Shuttle eDTop: "+$tmShuttleDoorTop.gethealth()+"| Shuttle: eDBottom"+$tmShuttleDoorBottom.gethealth()+"\n");
+}
+
+//======================================================================
+// Exterior Door -> Sequences
+//======================================================================
+void shuttleV2s_ShuttleDoorOpen()
+////////////////////////////////////////////////////////////////////////
+//Shuttle Ramp Opening sequence
+{
+	print("^5ShuttleDoorExterior: Opening\n");
+	$mShuttleDoor.setfloatvar("state",1);//Busy
+	$tShuttleDoor1.playsound	("sound/vehicles/shuttlecraft/shuttle_beep2.wav",1 ,2 ,400 );
+	wait(.025);
+	$originShuttleV2sDoorBottom.loopsound	("sound/vehicles/shuttlecraft/shuttle_door_open.wav",2 ,200 );
+	$mShuttleDoor.anim("closed");
+	wait( 0.001 );
+	$mShuttleDoor.anim("opening");
+	$originShuttleV2sDoorTop.time ( 1.7 );
+	$originShuttleV2sDoorTop.rotateXdown ( 55 );
+	$originShuttleV2sDoorBottom.time ( 1.8 );
+	$originShuttleV2sDoorBottom.rotateXup ( 18 );
+	waitforanimation( $mShuttleDoor,"opening");
+	$originShuttleV2sDoorBottom.stoploopsound();
+	$mShuttleDoor.anim("open_idle");
+	$originShuttleV2sDoorBottom.playsound("sound/vehicles/shuttlecraft/shuttle_door_openclose_stop.wav",1 ,1 ,200 );
+	waitforanimation( $mShuttleDoor,"open_idle");
+	$originShuttleV2sDoorTop.angles('-55 180 0');
+	$originShuttleV2sDoorBottom.angles('18 180 0');
+	$mShuttleDoor.setfloatvar("state",2);//is Open
+}
+
+
+void shuttleV2s_ShuttleDoorClose()
+////////////////////////////////////////////////////////////////////////
+//Shuttle Ramp Opening sequence
+{
+	print("^5ShuttleDoorExterior:Closeing\n");
+	$mShuttleDoor.setfloatvar("state",1);//busy
+	$tShuttleDoor1.playsound	("sound/vehicles/shuttlecraft/shuttle_beep1.wav",1 ,2 ,400 );
+	wait(.025);
+	$originShuttleV2sDoorBottom.loopsound	("sound/vehicles/shuttlecraft/shuttle_door_close.wav",2 ,200 );
+	$mShuttleDoor.anim("open_idle");
+	wait( 0.001 );
+	$mShuttleDoor.anim("closing");
+	$originShuttleV2sDoorTop.time ( 2.0 );
+	$originShuttleV2sDoorTop.rotateXup ( 55 );
+	$originShuttleV2sDoorBottom.time ( 1.8 );
+	$originShuttleV2sDoorBottom.rotateXdown ( 18 );
+	waitforanimation( $mShuttleDoor,"closing");
+	$originShuttleV2sDoorBottom.stoploopsound();
+	$originShuttleV2sDoorBottom.playsound("sound/vehicles/shuttlecraft/shuttle_door_openclose_stop.wav",1 ,1 ,200 );
+	$mShuttleDoor.anim("closed");
+	waitforanimation( $mShuttleDoor,"closed");
+	$originShuttleV2sDoorBottom.angles('0 180 0');
+	$originShuttleV2sDoorTop.angles('0 180 0');
+	$mShuttleDoor.setfloatvar("state",0);//is closed
+}
+
+
+//======================================================================
+// Transporter -> Sensitive Triggers
+//======================================================================
+void shuttleV2s_tmShuttleTransporter1()
+////////////////////////////////////////////////////////////////////////
+// Transporterplatform Thread
+{
+	print("^5 Trigger -> tmShuttleTransporter1 \n");
+	eShuttleTransporter1= $tmShuttleTransporter1.getLastActivatingEntity();
+	$tmShuttleTransporter1.nottriggerable();
+	thread shuttleV2s_ShuttleTransportation( eShuttleTransporter1,'3652 2062 200' ,1 );
+}
+void shuttleV2s_tmShuttleTransporter2()
+////////////////////////////////////////////////////////////////////////
+// Transporterplatform Thread
+{
+	print("^5 Trigger -> tmShuttleTransporter2 \n");
+	eShuttleTransporter2= $tmShuttleTransporter2.getLastActivatingEntity();
+	$tmShuttleTransporter2.nottriggerable();
+	thread shuttleV2s_ShuttleTransportation( eShuttleTransporter2,'3652 2062 200' ,2 );
+}
+
+//======================================================================
+// Transporter -> Transportation Thread
+//======================================================================
+void shuttleV2s_ShuttleTransportation( entity eShuttleTransporterbuffer,vector vTransportCoordinates,float TRANSPORT_NUM )
+////////////////////////////////////////////////////////////////////////
+// Transportations Thread
+{
+	eShuttleTransporterbuffer.displayeffect("TransportOut","Federation");
+	wait( 2.5 );
+	//This constucht is to avoid the entitys beam in each other
+	if( TRANSPORT_NUM== 1)
+	{
+		vTransportCoordinates_y += 30;
+	}
+	else
+	{
+		vTransportCoordinates_y += -30;
+	}
+	eShuttleTransporterbuffer.origin( vTransportCoordinates ); //x y z
+	eShuttleTransporterbuffer.displayeffect("TransportIn","Federation");
+	eShuttleTransporterbuffer.setfloatvar("shuttleCrew",0 );
+}
+
+//======================================================================
+// Model Animations -> Inverter Thread
+//======================================================================
+void shuttleV2s_tShuttleInverter()
+////////////////////////////////////////////////////////////////////////
+// Inverter lock/unlock Thread
+{
+//opening-dmg
+print("shuttleV2s_tShuttleInverter -> Empty");
+}
+
+//======================================================================
+//Interior Effect Manager -> Shields
+//======================================================================
+void shuttleV2s_consoleShields()
+//skin0= system offline
+//skin1= shilds offline
+//skin2= shilds online
+////////////////////////////////////////////////////////////////////////
+// Manages the Console Shaders for the Shields
+{
+	if ( $tmShuttleEngineLeft.getHealth() > 0 && $tmShuttleEngineRight.getHealth() > 0 ) //Default Model - Engines Okay
+	{
+		if($mShuttleExterior.doesVarExist("shieldState")) //0=deactivated,1=Activated,2=bussy,3=destroyed/defect
+		{
+			if( $mShuttleExterior.getfloatvar("shieldState")== 0 )
+			{
+				$mShuttleInterior.surface("material4","+skin1");
+				$mShuttleInterior.surface("material4","-skin2");
+			}
+			else if( $mShuttleExterior.getfloatvar("shieldState")== 1 )
+			{
+				$mShuttleInterior.surface("material4","-skin1");
+				$mShuttleInterior.surface("material4","+skin2");
+			}
+			else if( $mShuttleExterior.getfloatvar("shieldState")== 3 )
+			{
+				$mShuttleInterior.surface("material4","-skin1");
+				$mShuttleInterior.surface("material4","-skin2");
+			}
+		}
+		else
+		{
+			$mShuttleInterior.surface("material4","+skin1");//Shields Offline Show
+		}
+	}
+	else //Model changed - Engines Damaged
+	{
+		if($mShuttleExterior.doesVarExist("shieldState")) //0=deactivated,1=Activated,2=bussy,3=destroyed/defect
+		{
+			if( $mShuttleExterior.getfloatvar("shieldState")== 0 )
+			{
+				$mShuttleInteriorDMG.surface("material4","+skin1");
+				$mShuttleInteriorDMG.surface("material4","-skin2");
+			}
+			else if( $mShuttleExterior.getfloatvar("shieldState")== 1 )
+			{
+				$mShuttleInteriorDMG.surface("material4","-skin1");
+				$mShuttleInteriorDMG.surface("material4","+skin2");
+			}
+			else if( $mShuttleExterior.getfloatvar("shieldState")== 3 )
+			{
+				$mShuttleInteriorDMG.surface("material4","-skin1");
+				$mShuttleInteriorDMG.surface("material4","-skin2");
+			}
+		}
+		else
+		{
+			$mShuttleInteriorDMG.surface("material4","+skin1");//Shields Offline Show
+		}
+	}
+}
+
+
+//======================================================================
+//Interior Effect Manager -> Engines
+//======================================================================
+void shuttleV2s_consoleEngines()
+//skin0= engine left damaged
+//skin1= engine right damaged
+//skin2= engine left&right damaged
+////////////////////////////////////////////////////////////////////////
+// Manages the Console Shaders for the Shields
+{
+	if( $tmShuttleEngineLeft.getHealth() > 0 && $tmShuttleEngineRight.getHealth() > 0 ) //Left and Right Okay
+	{
+		$mShuttleInterior.show();//Okay Engine Model
+		$mShuttleInteriorDMG.hide();//Damaged Engine Model
+		$mShuttleInterior.surface("material9","+skin1");
+	}
+	else
+	{
+		$mShuttleInteriorDMG.playsound("sound/ships/forever/for_alarm_beeps.wav",2,2,200 );
+		if( $tmShuttleEngineLeft.getHealth() <= 0 && $tmShuttleEngineRight.getHealth() > 0 ) //Left < 0 but right okay
+		{
+			$mShuttleInteriorDMG.show();
+			$mShuttleInterior.hide();
+			$mShuttleInteriorDMG.surface("material9","-skin1");
+			$mShuttleInteriorDMG.surface("material9","-skin2");
+		}
+		else if( $tmShuttleEngineLeft.getHealth() > 0 && $tmShuttleEngineRight.getHealth() <= 0 ) //Right < 0 but left okay
+		{
+			$mShuttleInteriorDMG.show();
+			$mShuttleInterior.hide();
+			$mShuttleInteriorDMG.surface("material9","+skin1");
+			$mShuttleInteriorDMG.surface("material9","-skin2");
+		}
+		else //Left and Right < 0
+		{
+			$mShuttleInteriorDMG.show();
+			$mShuttleInterior.hide();
+			$mShuttleInteriorDMG.surface("material9","-skin1");
+			$mShuttleInteriorDMG.surface("material9","+skin2");
+		}
+		shuttleV2s_consoleShields(); //Update Shild Status
+	}
+
+}
+
+
+void shuttleV2s_setOnGround()
+{
+vector finalshuttleStartOrigin;
+//prepare dummy to chek teh ground...
+	$dummy.setsize('-635 -343 0','640 343 0');
+	$dummy.droptofloor( 99999 );
+//get shuttle into the correct angle
+	$originShuttleV2s.time(1);
+	$originShuttleV2s.rotateYdown(shuttleV2s_startAngle+270);
+//set new origin for shuttle
+	finalshuttleStartOrigin= $dummy.getOrigin();
+	finalshuttleStartOrigin_z += 143;
+	$originShuttleV2s.origin(finalshuttleStartOrigin);
+//remove dummy after work done
+	wait(10);
+	$dummy.remove();	
+	return;
+	while(1)
+	{
+		$onGroundOriginShuttleV2s.selfdetonate();
+		$originShuttleV2s.selfdetonate();
+		wait(1);
+	}
+}
+
+
+float chekdistancetoPilot(entity eTarget,entity eTocheck)
+{
+	if(doesEntityExist(eShuttlePilot)){
+		if(!eTocheck.iswithindistanceof( eTarget,100 )){
+			centerprint(">= 100");
+			return 0;
+		}
+	}
+	else{
+		centerprint("!= exist");
+		return 0;
+	}
+	return 1;
+}
